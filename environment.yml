@@ -136,6 +136,8 @@ dependencies:
       - fqdn==1.5.1
       - ipywidgets==8.1.2
       - isoduration==20.11.0
+      - jax==0.4.26
+      - jaxlib==0.4.26
       - jsonpointer==2.4
       - jupyter==1.0.0
       - jupyter-console==6.6.3
@@ -143,10 +145,13 @@ dependencies:
       - kiwisolver==1.4.5
       - lab==8.1
       - matplotlib==3.8.4
+      - ml-dtypes==0.4.0
+      - opt-einsum==3.3.0
       - pillow==10.3.0
       - pyparsing==3.1.2
       - qtconsole==5.5.1
       - qtpy==2.4.1
+      - scipy==1.13.0
       - simplejson==3.19.2
       - tqdm==4.66.2
       - txt2tags==3.9
