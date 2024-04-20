@@ -1,6 +1,6 @@
 # Define parameters that will be constant throughout the tutorial
 # Constants and network parameters
-_dt = 0.1           # Time step (ms)
+_dt = 0.01           # Time step (ms)
 _t_max = 100        # Total time of simulation (ms)
 
 # Neuron parameters
