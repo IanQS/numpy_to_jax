@@ -1,5 +1,6 @@
 name: numpy_to_jax
 channels:
+  - conda-forge
   - defaults
 dependencies:
   - anyio
@@ -125,4 +126,3 @@ dependencies:
   - zeromq
   - zipp
   - zlib
-
