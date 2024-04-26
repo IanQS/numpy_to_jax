@@ -1,2 +1,3 @@
+solutions/spike_res.npy  # Ignore the obnoxiously large file
 .ipynb_checkpoints/
 __pycache__/
