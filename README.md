@@ -27,9 +27,20 @@ Using namedtuples to clean up your code
 
 ### L5: Misc. Using einsum
 
+This isn't exclusive to JAX
+
 ### L6: Misc. Using vmap
 
+- make your code look more like the math described in the papers
+
 ### L7: Misc. Using the profiler and visualizing the computation graph
+
+- discrepancies between our machines
+- Understanding where your operations are going
+
+### L8: Randomness in JAX
+
+- reproducible randomness across machines across accelerators
 
 ## LIF BenchmarksSmall Benchmarks
 
