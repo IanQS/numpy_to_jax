@@ -27,11 +27,23 @@ Using namedtuples to clean up your code
 
 ### L5: Misc. Using einsum
 
-This isn't exclusive to JAX
+This isn't exclusive to JAX, but makes your code much cleaner
 
 ### L6: Misc. Using vmap
 
 - make your code look more like the math described in the papers
+
+## LIF Benchmarks
+
+2020 Macbook Pro M1 chip with 32gb RAM 
+
+**Numpy**: 50s
+**Jax-01**: 8.8s
+**Jax-02-unoptimized**: 20.3s
+**Jax-02-Correct**: 6.7s
+**Jax-03**: 6.4s
+
+# Work in progress:
 
 ### L7: Misc. Using the profiler and visualizing the computation graph
 
@@ -41,11 +53,3 @@ This isn't exclusive to JAX
 ### L8: Randomness in JAX
 
 - reproducible randomness across machines across accelerators
-
-## LIF BenchmarksSmall Benchmarks
-
-**Numpy**: 50s
-**Jax-01**: 8.8s
-**Jax-02-unoptimized**: 20.3s
-**Jax-02-Correct**: 6.7s
-**Jax-03**: 6.4s
