@@ -12,14 +12,19 @@ The `exercises` folder contains the code structured as a series of exercises for
 
 ### L2 Jax JIT: 
 
-- What is it?
-- What do I need to look out for?
+- Using `jit`
 
-### L3 Jax Scan: 
+- Understanding **when** to use jit a.k.a why not jit everything?
+
+- Timing `jax`
+
+### L3 Jax loops: 
 
 - reading haskell-like function signatures
-- optimizing 
-- What do I need to look out for?
+
+- `fori_loop`, `while_loop`, `scan`
+
+- optimizing
 
 ### L4: Cleaning up the code 
 

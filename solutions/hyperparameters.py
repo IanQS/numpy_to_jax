@@ -9,4 +9,4 @@ _V_reset = -65.0    # Reset potential (mV)
 _V_thresh = -50.0   # Threshold potential (mV)
 _R = 1.0            # Membrane resistance (MΩ)
 
-num_simulations = 10
+num_simulations = 3
