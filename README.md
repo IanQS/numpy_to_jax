@@ -1,8 +1,10 @@
-# Numpy to Optimized Jax 
+# Numpy To Optimized Jax
 
-LIF Implementation for a real-word example of how to go from a numpy version to a highly optimized jax. During the course of this tutorial, we will also discuss best practices for cleaner code, profiling, and checking the computation graph.
+Jax is often thought of as Numpy for the GPU, but it is so much more (both in terms of features, and sharp edges). The tutorials presented here—one aimed at a general audience and the other at computational neuroscientists—were inspired by a roadblock I encountered in my research. Specifically, I was working on a LIF simulation problem that, despite using vectorized Numpy, took excessively long to run. By incorporating Jax into my workflow and iterating on it, I managed to reduce the runtime from ~10 seconds to ~0.2 seconds.
 
-This tutorial is comprises lessons that are structured as part of the LIF theme, and outside that theme; there's no point in trying to shoe-horn in these lessons.
+## The Tutorial
+
+This tutorial is available in two versions: one focuses on understanding the concepts required to code effectively in Jax, while the other, more comprehensive version, applies these concepts to progressively optimize a baseline LIF model.
 
 ## Contents:
 
