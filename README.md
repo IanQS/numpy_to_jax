@@ -28,17 +28,23 @@ The `exercises` folder contains the code structured as a series of exercises for
 
 - optimizing
 
-### L4: Cleaning up the code 
-
-Using namedtuples to clean up your code
-
-### L5: Misc. Using einsum
-
-This isn't exclusive to JAX, but makes your code much cleaner
-
-### L6: Misc. Using vmap
+### L4: Misc. Using vmap
 
 - make your code look more like the math described in the papers
+
+### L5: Profiling your code
+
+
+
+### L6: Jax's Sharp Edges
+
+### L7: using Einsum for more readable code
+
+## Bonus Content:
+
+### NamedTuples
+
+Using namedtuples to clean up your Jax code
 
 ## LIF Benchmarks
 
@@ -52,11 +58,6 @@ This isn't exclusive to JAX, but makes your code much cleaner
 
 # Work in progress:
 
-### L7: Misc. Using the profiler and visualizing the computation graph
-
-- discrepancies between our machines
-- Understanding where your operations are going
-
-### L8: Randomness in JAX
+## Randomness in JAX
 
 - reproducible randomness across machines across accelerators
