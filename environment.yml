@@ -1,5 +1,6 @@
 name: numpy_to_jax2
 channels:
+  - conda-forge
   - defaults
 dependencies:
   - anyio=4.2.0
@@ -50,8 +51,8 @@ dependencies:
   - jupyterlab_server=2.25.1
   - libcxx=14.0.6
   - libffi=3.4.4
-  - libgfortran=5.0.0
-  - libgfortran5=11.3.0
+  - libgfortran
+  - libgfortran5
   - libopenblas=0.3.21
   - libsodium=1.0.18
   - llvm-openmp=14.0.6
