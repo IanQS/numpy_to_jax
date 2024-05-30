@@ -1,3 +1,4 @@
 solutions/spike_res.npy  # Ignore the obnoxiously large file
+.DS_Store
 .ipynb_checkpoints/
 __pycache__/
