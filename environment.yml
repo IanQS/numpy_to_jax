@@ -1,4 +1,4 @@
-name: numpy_to_jax2
+name: numpy_to_jax
 channels:
   - conda-forge
   - defaults
