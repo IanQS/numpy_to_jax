@@ -60,3 +60,17 @@ Using namedtuples to clean up your Jax code
 **Jax-02-unoptimized**: 20.3s
 **Jax-02-Correct**: 6.7s
 **Jax-03**: 6.4s
+
+## Citation
+
+If you use this software in your research, please cite it as follows:
+
+```bibtex
+@misc{numpy_to_jax,
+  title = {Numpy To Jax},
+  author = {Ian Quah},
+  year = {2024},
+  url = {https://github.com/IanQS/numpy_to_jax},
+  version = {1.0.0},
+  note = {Jax is often thought of as Numpy for the GPU, but it is so much more (both in terms of features, and sharp edges). The tutorials presented here—one aimed at a general audience and the other at computational neuroscientists—were inspired by a roadblock I encountered in my research}
+}
