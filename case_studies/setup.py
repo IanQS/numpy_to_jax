@@ -13,10 +13,10 @@ def dump_nb(p_name: str, mode: NBType):
     # Define the structure of a minimal Jupyter notebook
     if mode == NBType.Jax:
         _imp = "import jax.numpy as jnp"
-        f_name = f"{p_name}_jax.ipynb"
+        f_name = f"jax_{p_name}.ipynb"
     else:
         _imp = "import numpy as np"
-        f_name = f"{p_name}_np.ipynb"
+        f_name = f"np_{p_name}.ipynb"
     notebook_content = {
         "cells": [],
         "metadata": {},
