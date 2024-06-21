@@ -34,7 +34,7 @@ def log_likelihood(data, mu, sigma, pi, K):
                 jnp.expand_dims(data_point, axis=0), mu_k=mu[k], sigma_k=sigma[k]
             )
             mixture_likelihood += v
-        log_likelihood += np.log(mixture_likelihood)
+        log_likelihood += jnp.log(mixture_likelihood)
 
     return log_likelihood
 
@@ -129,6 +129,8 @@ def m_step(X, mus, responsibilities):
 
     return mus, sigmas, jnp.expand_dims(cls_prior, -1)
 
+def gmm_single_iteration():
+    pass
 
 def EM_GMM(
         data: np.ndarray,
@@ -142,7 +144,7 @@ def EM_GMM(
     counter = 0
     ll_container = []
     TOL = 0.00001
-    ll_container.append(np.inf)
+    ll_container.append(jnp.inf)
 
     while True:  # Run until converges
         # e-step
@@ -151,15 +153,16 @@ def EM_GMM(
         # m-step
         mus, sigmas, cls_probs = m_step(data, mus, responsibilities)
         # Recalculate the log-likelihood
-        ll_curr = float(log_likelihood(data, mus, sigmas, cls_probs, guess_num_classes))
+        ll_curr = log_likelihood(data, mus, sigmas, cls_probs, guess_num_classes)
 
-        if np.abs(ll_container[-1] - ll_curr) < TOL:
-            print(f"Converged to within {TOL} after: {counter} iterations")
+        if jnp.abs(ll_container[-1] - ll_curr) < TOL:
+            jax.debug.print("Converged to within {TOL} after: {counter} iterations", TOL=TOL, counter=counter)
             break
 
-        ll_container.append(float(ll_curr))
+        ll_container.append(ll_curr)
         if verbose:
-            print(f"Data Log-Likelihood at iteration: {counter} = {ll_curr:.6f}")
+            jax.debug.print("Converged to within {TOL} after: {counter} iterations", TOL=TOL, counter=counter)
+            jax.debug.print("Data Log-Likelihood at iteration: {counter} = {ll_curr}", counter=counter, ll_curr=ll_curr)
         counter += 1
 
     responsibilities = e_step(data, mus, sigmas, cls_probs)
