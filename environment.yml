@@ -175,6 +175,7 @@ dependencies:
       - qtpy==2.4.1
       - rich==13.7.1
       - scipy==1.13.0
+      - scikit-learn==1.2.2
       - simplejson==3.19.2
       - sympy==1.12
       - tensorboard==2.16.2
