@@ -145,6 +145,9 @@ def EM_GMM(
     ll_container = []
     TOL = 0.00001
     ll_container.append(jnp.inf)
+    jax.lax.while_loop(
+
+    )
 
     while True:  # Run until converges
         # e-step
