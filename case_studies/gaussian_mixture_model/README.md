@@ -18,11 +18,6 @@ the GMM over the standard K-means including:
 - `vmap`
 - composing `jit` and `vmap`. The functional programming nature of `jax` means that we can compose these higher-order functions, making our code look very clean. See the `e_step` for more. 
 
-### Additional Concepts
-
-- `pmap`
-- `rng`
-
 ---
 
 # Optimal Model identification

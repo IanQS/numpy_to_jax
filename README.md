@@ -63,6 +63,8 @@ Case studies build on the exercises and rely on concepts covered in the lessons.
   - Introduction to parallel execution with examples using multiple devices. Having said that, this should still work even with a single device
 - [ ] grad
   - and grad_and_val to get the gradient
+- [ ] GMM Advanced
+  - Add in `rng` and `pmap` to a separate notebook
 
 ## Citation
 
