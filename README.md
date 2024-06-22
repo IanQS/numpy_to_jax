@@ -1,8 +1,17 @@
 # Numpy To Optimized Jax
 
-Jax is often thought of as Numpy for the GPU, but it is so much more (both in terms of features, and sharp edges). The tutorials presented here—one aimed at a general audience and the other at computational neuroscientists—were inspired by a roadblock I encountered in my research. Specifically, I was working on a LIF simulation problem that, despite using vectorized Numpy, took excessively long to run. By incorporating Jax into my workflow and iterating on it, I managed to reduce the runtime from ~10 seconds to ~0.2 seconds.
+**Motivation**: This repo was originally a series of lessons introducing Jax concepts, and it can still be used for that. However, it has also advanced beyond that to include 
+example code solving various real-world problems. These case-studies themselves can be used as a follow-up lesson for those who have finished the first lesson.
 
-## Contents:
+**Blurb**: Jax is often thought of as Numpy for the GPU, but it is so much more (both in terms of features, and sharp edges). The tutorials presented here—one aimed at a general audience and the other at computational neuroscientists—were inspired by a roadblock I encountered in my research. Specifically, I was working on a LIF simulation problem that, despite using vectorized Numpy, took excessively long to run. By incorporating Jax into my workflow and iterating on it, I managed to reduce the runtime from ~10 seconds to ~0.2 seconds.
+
+## Table of Contents
+- [Exercises](#exercises) 
+- [Case Studies](#case-studies)
+- [WIP](#work-in-progress)
+- [Citing this work](#citation)
+
+## Exercises:
 
 The `exercises` folder contains the code structured as a series of exercises for you to work through to reinforce the concepts.
 
@@ -40,6 +49,10 @@ The `exercises` folder contains the code structured as a series of exercises for
 
 Using namedtuples to clean up your Jax code
 
+## Case Studies
+
+Case studies build on the exercises and rely on concepts covered in the lessons. In the case studies we see the concepts applied to real-world problems.
+
 ---
 
 # Work in progress:
@@ -50,16 +63,8 @@ Using namedtuples to clean up your Jax code
   - Introduction to parallel execution with examples using multiple devices. Having said that, this should still work even with a single device
 - [ ] grad
   - and grad_and_val to get the gradient
-
-## LIF Benchmarks
-
-2020 Macbook Pro M1 chip with 32gb RAM
-
-**Numpy**: 50s
-**Jax-01**: 8.8s
-**Jax-02-unoptimized**: 20.3s
-**Jax-02-Correct**: 6.7s
-**Jax-03**: 6.4s
+- [ ] GMM Advanced
+  - Add in `rng` and `pmap` to a separate notebook
 
 ## Citation
 
