@@ -10,13 +10,21 @@ the GMM over the standard K-means including:
 - doesn't assume equal cluster size
 - allows "optimal model" identification via the log-likelihood
 
-## Concept Breakdown
+## Core Concepts
 
-### Core Concepts
+We use the following concepts:
 
 - `jit`
 - `vmap`
 - composing `jit` and `vmap`. The functional programming nature of `jax` means that we can compose these higher-order functions, making our code look very clean. See the `e_step` for more. 
+
+## The Algorithm
+
+We implement the steps in the following image. 
+
+![](assets/gmm_alg.png)
+
+**Note** the image above was taken (with permission) from [Prof. Matt Golub](https://homes.cs.washington.edu/~mgolub/)'s course, [Machine Learning for Neuroscience (CSE599N)](https://courses.cs.washington.edu/courses/cse599n/24sp/).
 
 ---
 
