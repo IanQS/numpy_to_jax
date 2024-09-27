@@ -31,23 +31,17 @@ The `exercises` folder contains the code structured as a series of exercises for
 
 - `fori_loop`, `while_loop`, `scan`
 
-- optimizing
-
 ### L4: Misc. Using vmap
 
 - make your code look more like the math described in the papers
 
 ### L5: Profiling your code
 
-### L6: Jax's Sharp Edges
+- in prior notebooks we had introduced methods to speed up code, and the JIT compilation. Let's investigate if and how much they speed up code!
 
-### L7: using Einsum for more readable code
+### Bonus: using Einsum for more readable code
 
-## Bonus Content:
-
-### NamedTuples
-
-Using namedtuples to clean up your Jax code
+Einsum isn't specific to Jax, but it's still useful to know!
 
 ## Case Studies
 
