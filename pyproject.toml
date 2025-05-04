@@ -1,0 +1,14 @@
+[project]
+name = "numpy-to-jax"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "jax>=0.6.0",
+    "jupyterlab>=4.4.1",
+    "matplotlib>=3.10.1",
+    "numpy>=2.2.5",
+    "scikit-learn>=1.6.1",
+    "tensorboard-plugin-profile>=2.19.4",
+]
