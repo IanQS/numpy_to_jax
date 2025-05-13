@@ -3,6 +3,7 @@ solutions/spike_res.npy  # Ignore the obnoxiously large file
 .ipynb_checkpoints/
 __pycache__/
 scratch
+.virtual_documents/
 
 .idea
 .DS_store
