@@ -39,6 +39,12 @@ The `exercises` folder contains the code structured as a series of exercises for
 
 - in prior notebooks we had introduced methods to speed up code, and the JIT compilation. Let's investigate if and how much they speed up code!
 
+### L6: RNG
+
+- learn the design decisions behind Jax's RNG implementation
+
+
+
 ### Bonus: using Einsum for more readable code
 
 Einsum isn't specific to Jax, but it's still useful to know!
@@ -51,8 +57,6 @@ Case studies build on the exercises and rely on concepts covered in the lessons.
 
 # Work in progress:
 
-- [ ] Randomness in JAX
-  - reproducible randomness across machines across accelerators
 - [ ] pmap
   - Introduction to parallel execution with examples using multiple devices. Having said that, this should still work even with a single device
 - [ ] grad
@@ -67,7 +71,7 @@ If you use this software in your research, please cite it as follows:
 ```bibtex
 @misc{numpy_to_jax,
   title = {Numpy To Jax},
-  author = {Ian Quah},
+  author = {Ian Quah, Bryan Quah},
   year = {2024},
   url = {https://github.com/IanQS/numpy_to_jax},
   version = {1.0.0},
