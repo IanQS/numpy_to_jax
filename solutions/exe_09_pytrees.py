@@ -720,7 +720,20 @@ def _(
 
 
 @app.cell
-def _():
+def _(mo):
+    mo.md(
+        r"""
+    # Further Reading
+
+    [register_dataclass](https://docs.jax.dev/en/latest/_autosummary/jax.tree_util.register_dataclass.html#jax.tree_util.register_dataclass) - registering a dataclass (the method we used above was generic across structures)
+
+    [Tree Module](https://docs.jax.dev/en/latest/jax.tree.html) - core `PyTree` utilities
+
+    [Tree-Util Module](https://docs.jax.dev/en/latest/jax.tree_util.html) - utility functions that are more under-the-hood / powerusers
+
+
+    """
+    )
     return
 
 
