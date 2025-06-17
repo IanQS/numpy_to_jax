@@ -334,8 +334,6 @@ def _(mo):
     def add_numerics(v1, v2):
         return v1 + v2
     ```
-
-    Remember that `Jax` will apply this function, `add_numerics`, to all leaf elements. How do we remove the undesired leaves or stop `Jax` from continuing to descend down structures? For example, we don't need it to traverse "metadata" in this case.
     """
     )
     return
@@ -347,7 +345,7 @@ def _(mo):
         r"""
     #### Reminder:
 
-    As a reminder, here are the leaves in our `dense_pt`
+    As a reminder, here are the leaves in our `dense_pt`, only a few of which it makes sense to add together
     """
     )
     return
@@ -359,53 +357,19 @@ def _(analyze_pytrees, dense_pt):
     return
 
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-    Your natural reaction might be to use something like:
-
-    ```python
-    jax.tree.map(
-        add_numerics, dense_pt["numerics"], dense_pt["numerics"]
-    )
-    ```
-
-    which is definitely a good option. But let's take a look at another option that pops up when we look at the function documentation:
-
-
-    ```python
-    jax.tree.map(
-        f: 'Callable[..., Any]',
-        tree: 'Any',
-        *rest: 'Any',
-        is_leaf: 'Callable[[Any], bool] | None' = None,  # <----- This thing! 
-    ) -> 'Any'
-    ```
-
-    It's looking like `is_leaf` might be our solution!
-
-    > is_leaf: an optionally specified function that will be called at each flattening step. It should return a boolean, which indicates whether the flattening should traverse the current object, or if it should be stopped immediately, with the whole subtree being treated as a leaf
-    """
-    )
-    return
-
-
 @app.cell
 def _(analyze_pytrees, dense_pt, jax):
+    @jax.jit
     def add_numerics(v1, v2):
-        if isinstance(v1, dict):
-            return v1
         return v1 + v2
 
-    is_leaf_filter = lambda x: isinstance(x, dict) and "metadata" in x # TODO: define the filter 
     analyze_pytrees(dense_pt)
     print("\n After Addition")
     analyze_pytrees(jax.tree.map(
         # TODO: fill in the args for the `tree.map`
-        add_numerics, dense_pt, dense_pt, is_leaf= is_leaf_filter
+        add_numerics, dense_pt["numerical"], dense_pt["numerical"]
     ))
-    return
+    return (add_numerics,)
 
 
 @app.cell(hide_code=True)
@@ -421,7 +385,24 @@ def _(mo):
 
 
 @app.cell
-def _(jax, jnp):
+def _(jnp):
+    params = {
+        'network': {
+            'metadata': {"device": "GPU", "gpu": 0, "dtype": jnp.float64},
+
+            # Say we wanted custom initialization of parameters, depending on what layer we're on. 
+            # A contrived example would be initialization based on where in the network (depth-wise) it is
+            'layers': {
+                0: {'dense': {'W': jnp.ones((128, 256)), "init": "Xavier", 'b': jnp.ones(256)}},
+                1: {'dense': {'W': jnp.ones((256, 128)), "init": "Normal", 'b': jnp.ones(128)}}
+            }
+        }
+    }
+    return (params,)
+
+
+@app.cell
+def _(jax, jnp, params):
     def join_path(path: tuple):
         """
         Utility function to generate the entire path that we traverse
@@ -430,7 +411,7 @@ def _(jax, jnp):
 
 
     def layer_specific_init(path: tuple, params: dict) -> dict:
-        """Initialization that depends on WHERE the parameter lives in the model."""
+        """Initialization here depends on where (layer-wise) the data is."""
         if not isinstance(params, dict) or "dense" not in params:
             return params
 
@@ -452,7 +433,7 @@ def _(jax, jnp):
         if layer_num == 0:  
             # First layer - more conservative. Realistically not what we 
             # should do in prod, but illustrates our point.
-            W = jax.random.normal(jax.random.PRNGKey(42), param["W"].shape) * 0.01
+            W = jax.random.normal(jax.random.PRNGKey(42), param["W"].shape) * 0.001
             init_type = "Small_Normal"
         elif layer_num == 1:  # Second layer - Xavier
             fan_in, fan_out = param["W"].shape
@@ -468,32 +449,15 @@ def _(jax, jnp):
             init_type = "He"
 
         b = jnp.zeros_like(param["b"])
-
-        print(f"Initialized {path_str} with {init_type}")
-
         return {"dense": {"W": W, "b": b, "init": init_type}}
-    params = {
-        'network': {
-            'metadata': {"device": "GPU", "gpu": 0, "dtype": jnp.float64},
-            'layers': {
-                0: {'dense': {'W': jnp.ones((128, 256)), "init": "Xavier", 'b': jnp.ones(256)}},
-                1: {'dense': {'W': jnp.ones((256, 128)), "init": "Normal", 'b': jnp.ones(128)}}
-            }
-        }
-    }
 
     # This requires map_with_path because we need to know which layer we're in!
-    initialized_params = jax.tree.map_with_path(
+    jax.tree.map_with_path(
         layer_specific_init, 
         params,
         is_leaf=lambda x: isinstance(x, dict) and "dense" in x
     )
-    return (initialized_params,)
 
-
-@app.cell
-def _(initialized_params):
-    initialized_params
     return
 
 
@@ -573,7 +537,26 @@ def _(mo):
     ## Registering our `DenseLayer`
 
     1) Register the dense layer with `PyTree`
+
     2) Verify the flatten and unflatten with `verify_registration`
+
+    ### Registration
+
+    The registration uses [register_pytree_node](https://docs.jax.dev/en/latest/_autosummary/jax.tree_util.register_pytree_node.html#jax.tree_util.register_pytree_node), which has the following signature:
+
+    ```python
+    register_pytree_node(nodetype, flatten_func, unflatten_func, flatten_with_keys_func=None)
+    \"""Parameters:
+
+        nodetype (type[T]) – a Python type to register as a pytree.
+
+        flatten_func (Callable[[T], tuple[_Children, _AuxData]]) – a function to be used during flattening, taking a value of type nodetype and returning a pair, with (1) an iterable for the children to be flattened recursively, and (2) some hashable auxiliary data to be stored in the treedef and to be passed to the unflatten_func.
+
+        unflatten_func (Callable[[_AuxData, _Children], T]) – a function taking two arguments: the auxiliary data that was returned by flatten_func and stored in the treedef, and the unflattened children. The function should return an instance of nodetype.
+
+        flatten_with_keys_func (Callable[[T], tuple[KeyLeafPairs, _AuxData]] | None)
+    \"""
+    ```
     """
     )
     return
@@ -637,24 +620,27 @@ def _(
 def _(mo):
     mo.md(
         r"""
-    ## Not so fast....
+    ## Revisiting an old friend....
 
-    Run the following cell, then add a `@jax.jit` to the `add_up` function and rerun it.
+    Let's look at the familiar function, `add_numerics`,
+
+    ```python
+    @jax.jit
+    def add_numerics(v1, v2):
+        return v1 + v2
+    ```
+
+    and try to run it!
     """
     )
     return
 
 
 @app.cell
-def _(initial, jax, jnp):
+def _(add_numerics, initial, jax):
     print(initial.numerical)
 
-    def add_up(t1, t2):
-        if isinstance(t1, jnp.ndarray) and isinstance(t2, jnp.ndarray):
-            return t1 + t2
-        return t1
-
-    print(jax.tree.map(add_up, initial, initial, is_leaf=lambda x: isinstance(x, dict)).numerical)
+    print(jax.tree.map(add_numerics, initial, initial, is_leaf=lambda x: isinstance(x, dict)).numerical)
     return
 
 
@@ -664,7 +650,12 @@ def _(mo):
         r"""
     ## The problem
 
-    Jax flattened our data and passed all of the information in the `children` variable to the `add_up` function. Ponder this statement as you solve the next exercise, where we make it work with `jit`
+    ### The API layer
+
+    Unlike before, we can't easily slice our dictionary. In fact, we don't **want** to slice our dictionary - at the API level, our user shouldn't need to know what's happening under the hood and do all sorts of funky slicing.
+
+    ### What went wrong?
+    In our `dense_tree_flatten`, all of the `children` information was passed in and `jit` tried to do its thing; Jax flattened our data, as specified by us, and passed all of the information in the `children` variable to the `add_up` function. Ponder this statement as you solve the next exercise, where you make the `DenseLayer` compatible with `jit`.
     """
     )
     return
@@ -684,7 +675,6 @@ def _(DenseLayer, RegisteredDenseLayer, register_pytree_node):
         for k, v in dl.metadata.items():
             md_keys.append(k)
             md_values.append(v)
-
 
         children = [dl.numerical["W"], dl.numerical["b"]] 
         return tuple(children), (md_keys, md_values)
@@ -708,6 +698,7 @@ def _(
     HIDDEN_DIM,
     NUM_FEATURES,
     RegisteredDenseLayerCompatible,
+    add_numerics,
     jax,
     jnp,
     metadata,
@@ -720,11 +711,7 @@ def _(
     )
     print(initial_dense_compat.numerical)
 
-    @jax.jit
-    def add_up_jitable(t1, t2):
-        return t1 + t2
-
-    print(jax.tree.map(add_up_jitable, initial_dense_compat, initial_dense_compat).numerical)
+    print(jax.tree.map(add_numerics, initial_dense_compat, initial_dense_compat).numerical)
     return
 
 
