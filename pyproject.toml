@@ -10,6 +10,8 @@ dependencies = [
     "matplotlib>=3.10.1",
     "numpy>=2.2.5",
     "scikit-learn>=1.6.1",
+    "seaborn>=0.13.2",
     "tensorboard>=2.19.0",
     "tensorboard-plugin-profile>=2.19.4",
+    "watchdog>=6.0.0",
 ]
