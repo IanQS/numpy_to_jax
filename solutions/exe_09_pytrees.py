@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.13.15"
-app = marimo.App()
+app = marimo.App(width="medium")
 
 
 @app.cell(hide_code=True)
@@ -237,11 +237,9 @@ def _(dense2, jax):
 def _(mo):
     mo.md(
         r"""
-    # Why would I use a PyTree over dataclasses?
+    # Essential `PyTree` methods
 
-    The lazy answer is that you want to use `PyTree` because of how it natively integrates with `Jax`. When we work with ML tasks, we often want to work with the leaves of our data structure, so it makes sense that the `Jax` team created utility functions to work with these structures. To see this, let's first create an example dataclass, working with the `DenseLayer` from before.
-
-    *it's actually possible to integrate the two, which we will cover at the very end of this notebook.
+    When we work with ML tasks, we often want to work with the leaves of our data structure, so it makes sense that the `Jax` team created utility functions to work with these structures. Let's explore a few of them.
     """
     )
     return
@@ -249,30 +247,17 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""## Dataclass and PyTree Definition""")
+    mo.md(r"""## PyTree Definition""")
     return
 
 
 @app.cell
 def _(jnp, np):
-    from dataclasses import dataclass
+
 
     NUM_FEATURES = 4
     HIDDEN_DIM = 16
 
-    @dataclass
-    class DenseLayer:
-        """
-        The equivalent of conv1, structure-wise
-        """
-        numerical: dict[str, jnp.ndarray]
-        metadata: dict[str, str]
-
-        def __init__(self, W, b, metadata):
-            self.numerical = {
-                "W": W, "b": b
-            }
-            self.metadata = {k:v for k,v in metadata.items()}
 
     PTDenseLayer = dict[str, 
         jnp.ndarray | 
@@ -298,10 +283,7 @@ def _(jnp, np):
         metadata=metadata
     )
 
-    dense_dtc = DenseLayer(W=jnp.asarray(np.random.rand(NUM_FEATURES, HIDDEN_DIM)),
-                         b= jnp.asarray([1, 1, 1, 1]), metadata=metadata
-                        )
-    return (dense_pt,)
+    return HIDDEN_DIM, NUM_FEATURES, dense_pt, metadata
 
 
 @app.cell(hide_code=True)
@@ -382,14 +364,23 @@ def _(analyze_pytrees, dense_pt):
 def _(mo):
     mo.md(
         r"""
-    Looking at the documentation, we see:
+    Your natural reaction might be to use something like:
 
+    ```python
+    jax.tree.map(
+        add_numerics, dense_pt["numerics"], dense_pt["numerics"]
+    )
     ```
+
+    which is definitely a good option. But let's take a look at another option that pops up when we look at the function documentation:
+
+
+    ```python
     jax.tree.map(
         f: 'Callable[..., Any]',
         tree: 'Any',
         *rest: 'Any',
-        is_leaf: 'Callable[[Any], bool] | None' = None,
+        is_leaf: 'Callable[[Any], bool] | None' = None,  # <----- This thing! 
     ) -> 'Any'
     ```
 
@@ -410,7 +401,7 @@ def _(analyze_pytrees, dense_pt, jax):
 
     is_leaf_filter = lambda x: isinstance(x, dict) and "metadata" in x # TODO: define the filter 
     analyze_pytrees(dense_pt)
-    print("\nFINAL")
+    print("\n After Addition")
     analyze_pytrees(jax.tree.map(
         # TODO: fill in the args for the `tree.map`
         add_numerics, dense_pt, dense_pt, is_leaf= is_leaf_filter
@@ -424,7 +415,7 @@ def _(mo):
         r"""
     ### Map-with-Path
 
-    If you look at the previous cell, you'll notice that we had no notion of the nodes that we traversed to get to our leaf nodes. When is this information useful? Say you wanted to have some custom logic depending on the path. Let's explore this in the next example, where we have 
+    If you look at the previous cell, you'll notice that we had no notion of the nodes that we traversed to get to our leaf nodes. When is this information useful? Say you wanted to have some custom logic depending on the path. Let's explore this in the next example, where we initialize parameters of our dense layer for our simple neural network library.
     """
     )
     return
@@ -433,6 +424,9 @@ def _(mo):
 @app.cell
 def _(jax, jnp):
     def join_path(path: tuple):
+        """
+        Utility function to generate the entire path that we traverse
+        """
         return '.'.join(str(key.key) if hasattr(key, 'key') else str(key) for key in path)
 
 
@@ -440,10 +434,10 @@ def _(jax, jnp):
         """Initialization that depends on WHERE the parameter lives in the model."""
         if not isinstance(params, dict) or "dense" not in params:
             return params
-    
+
         path_str = join_path(path)
         param = params["dense"]
-    
+
         # Extract layer number from path
         layer_num = None
         for key in path:
@@ -451,12 +445,14 @@ def _(jax, jnp):
             if key_str.isdigit():
                 layer_num = int(key_str)
                 break
-    
+
         if layer_num is None:
             raise ValueError(f"Could not find layer number in path: {path_str}")
-    
+
         # Different initialization based on layer depth
-        if layer_num == 0:  # First layer - more conservative
+        if layer_num == 0:  
+            # First layer - more conservative. Realistically not what we 
+            # should do in prod, but illustrates our point.
             W = jax.random.normal(jax.random.PRNGKey(42), param["W"].shape) * 0.01
             init_type = "Small_Normal"
         elif layer_num == 1:  # Second layer - Xavier
@@ -471,11 +467,11 @@ def _(jax, jnp):
             std = jnp.sqrt(2.0 / fan_in)
             W = jax.random.normal(jax.random.PRNGKey(42), param["W"].shape) * std
             init_type = "He"
-    
+
         b = jnp.zeros_like(param["b"])
-    
+
         print(f"Initialized {path_str} with {init_type}")
-    
+
         return {"dense": {"W": W, "b": b, "init": init_type}}
     params = {
         'network': {
@@ -508,14 +504,117 @@ def _(mo):
         r"""
     # Registering Custom Objects
 
-    Further above we discussed using `dataclass` to clean up our code and give it structure, instead of slicing and moving dictionary values around. How do we do this?
+    We often represent data in the form of classes or dataclasses, if only for encapsulation of logic. Unfortunately, `Jax` doesn't work natively with dataclasses. Fortunately, the team has exposed methods to integrate dataclasses into the ecosystem.
+
+    We will wrap up this lecture with our definition of `DenseLayer`
     """
     )
     return
 
 
 @app.cell
-def _():
+def _(mo):
+    mo.md(r"""## Dataclass Definition""")
+    return
+
+
+@app.cell
+def _(jnp):
+
+    from dataclasses import dataclass
+    @dataclass
+    class DenseLayer:
+        """
+        The equivalent of conv1, structure-wise
+        """
+        numerical: dict[str, jnp.ndarray]
+        metadata: dict[str, str]
+
+        def __init__(self, W, b, metadata):
+            self.numerical = {
+                "W": W, "b": b
+            }
+            self.metadata = {k:v for k,v in metadata.items()}
+
+        def __repr__(self):
+            shapes = {k: v.shape for k,v in self.numerical.items()}
+            return f"DL: Metadata: {self.metadata} with {shapes}"
+    return (DenseLayer,)
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""## Registering our `DenseLayer`""")
+    return
+
+
+@app.cell
+def _(DenseLayer):
+    from jax.tree_util import register_pytree_node
+
+    class RegisteredDenseLayer(DenseLayer):
+        def __repr__(self):
+            shapes = {k: v.shape for k,v in self.numerical.items()}
+            return f"RegisteredDenseLayer: Metadata: {self.metadata} with {shapes}"
+
+    def dense_tree_flatten(dl: DenseLayer):
+        md_keys = []
+        md_values = []
+    
+        for k, v in dl.metadata.items():
+            md_keys.append(k)
+            md_values.append(v)
+        
+        children = [dl.numerical["W"], dl.numerical["b"]] + md_values
+        aux_data = md_keys
+        return tuple(children), tuple(aux_data)
+    
+    def dense_tree_unflatten(aux_data, children):
+        W = children[0]
+        b = children[1]
+        reconstructed_metadata = {k: v for (k, v) in zip(aux_data, children[2:])}
+        return RegisteredDenseLayer(W, b, reconstructed_metadata)
+    
+
+    register_pytree_node(
+        RegisteredDenseLayer,
+        dense_tree_flatten,    # tell JAX what are the children nodes
+        dense_tree_unflatten   # tell JAX how to pack back into a 
+    )
+
+
+    return (RegisteredDenseLayer,)
+
+
+@app.cell
+def _(HIDDEN_DIM, NUM_FEATURES, RegisteredDenseLayer, jax, jnp, metadata, np):
+    def verify_registration() -> bool:
+        initial = RegisteredDenseLayer(
+            W = jnp.asarray(np.random.rand(NUM_FEATURES, HIDDEN_DIM)),
+            b= jnp.asarray([1, 1, 1, 1]),
+            metadata=metadata
+        )
+        tree_vals, tree_defn = jax.tree.flatten(initial)
+        reconstructed: RegisteredDenseLayer = jax.tree.unflatten(tree_defn, tree_vals)
+
+        ####################################
+        # Check Equality
+        ####################################
+        meta_keys_equal = set(initial.metadata.keys()) == set(reconstructed.metadata.keys())
+        if not meta_keys_equal:
+            print("Keys in our metadata were different!")
+            return False
+        meta_values_equal = True
+        for k in initial.metadata.keys():
+            meta_values_equal = meta_values_equal and (initial.metadata[k] == reconstructed.metadata[k])        
+    
+        w_equal = np.all(initial.numerical["W"] == reconstructed.numerical["W"])
+        b_equal = np.all(initial.numerical["b"] == reconstructed.numerical["b"])
+    
+        print(f"Weights Equal: {w_equal}, Biases Equal: {b_equal}, Metadata Equal: {meta_values_equal}")
+        return w_equal and b_equal and meta_keys_equal and meta_values_equal
+
+    verify_registration()
     return
 
 
