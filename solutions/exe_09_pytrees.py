@@ -656,6 +656,10 @@ def _(mo):
 
     ### What went wrong?
     In our `dense_tree_flatten`, all of the `children` information was passed in and `jit` tried to do its thing; Jax flattened our data, as specified by us, and passed all of the information in the `children` variable to the `add_up` function. Ponder this statement as you solve the next exercise, where you make the `DenseLayer` compatible with `jit`.
+
+    ### Fixing it
+
+    Modify the definition below and fix the issue!
     """
     )
     return
