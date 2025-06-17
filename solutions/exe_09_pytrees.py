@@ -18,7 +18,7 @@ def _(mo):
 
     - What is a `PyTree`?
     - what functions does Jax provide to interact with PyTrees? 
-    - Registering `dataclass`-es to leverage the `PyTree` ecosystem, which 
+    - Registering `dataclass`-es to leverage the `PyTree` ecosystem
 
     ## Concepts In action:
     """
@@ -31,13 +31,14 @@ def _():
     import time
     import numpy as np
     import matplotlib.pyplot as plt
+    from dataclasses import dataclass
 
     import jax
     import jax.numpy as jnp
     from jax import random
     from jax import make_jaxpr
     import marimo as mo
-    return jax, jnp, mo, np
+    return dataclass, jax, jnp, mo, np
 
 
 @app.cell
@@ -253,8 +254,6 @@ def _(mo):
 
 @app.cell
 def _(jnp, np):
-
-
     NUM_FEATURES = 4
     HIDDEN_DIM = 16
 
@@ -506,7 +505,7 @@ def _(mo):
 
     We often represent data in the form of classes or dataclasses, if only for encapsulation of logic. Unfortunately, `Jax` doesn't work natively with dataclasses. Fortunately, the team has exposed methods to integrate dataclasses into the ecosystem.
 
-    We will wrap up this lecture with our definition of `DenseLayer`
+    We will wrap up this lecture with our definition of `DenseLayer`.
     """
     )
     return
@@ -519,9 +518,8 @@ def _(mo):
 
 
 @app.cell
-def _(jnp):
+def _(dataclass, jax, jnp, np):
 
-    from dataclasses import dataclass
     @dataclass
     class DenseLayer:
         """
@@ -539,12 +537,45 @@ def _(jnp):
         def __repr__(self):
             shapes = {k: v.shape for k,v in self.numerical.items()}
             return f"DL: Metadata: {self.metadata} with {shapes}"
-    return (DenseLayer,)
+
+
+    def verify_registration(initial: "RegisteredDenseLayer") -> bool:
+        """
+        Quick function to verify that the registration was correct and works
+        """
+        tree_vals, tree_defn = jax.tree.flatten(initial)
+        reconstructed: "RegisteredDenseLayer" = jax.tree.unflatten(tree_defn, tree_vals)
+
+        ####################################
+        # Check Equality
+        ####################################
+        meta_keys_equal = set(initial.metadata.keys()) == set(reconstructed.metadata.keys())
+        if not meta_keys_equal:
+            print("Keys in our metadata were different!")
+            return False
+        meta_values_equal = True
+        for k in initial.metadata.keys():
+            meta_values_equal = meta_values_equal and (initial.metadata[k] == reconstructed.metadata[k])        
+
+        w_equal = np.all(initial.numerical["W"] == reconstructed.numerical["W"])
+        b_equal = np.all(initial.numerical["b"] == reconstructed.numerical["b"])
+
+        print(f"Weights Equal: {w_equal}, Biases Equal: {b_equal}, Metadata Equal: {meta_values_equal}")
+        return w_equal and b_equal and meta_keys_equal and meta_values_equal
+
+    return DenseLayer, verify_registration
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""## Registering our `DenseLayer`""")
+    mo.md(
+        r"""
+    ## Registering our `DenseLayer`
+
+    1) Register the dense layer with `PyTree`
+    2) Verify the flatten and unflatten with `verify_registration`
+    """
+    )
     return
 
 
@@ -560,61 +591,140 @@ def _(DenseLayer):
     def dense_tree_flatten(dl: DenseLayer):
         md_keys = []
         md_values = []
-    
+
         for k, v in dl.metadata.items():
             md_keys.append(k)
             md_values.append(v)
-        
-        children = [dl.numerical["W"], dl.numerical["b"]] + md_values
-        aux_data = md_keys
-        return tuple(children), tuple(aux_data)
-    
+
+        children = tuple([dl.numerical["W"], dl.numerical["b"]] + md_values)
+        aux_data = tuple(md_keys)
+        return children, aux_data
+
     def dense_tree_unflatten(aux_data, children):
-        W = children[0]
-        b = children[1]
+        W, b = children[0], children[1]
         reconstructed_metadata = {k: v for (k, v) in zip(aux_data, children[2:])}
         return RegisteredDenseLayer(W, b, reconstructed_metadata)
-    
+
 
     register_pytree_node(
         RegisteredDenseLayer,
         dense_tree_flatten,    # tell JAX what are the children nodes
         dense_tree_unflatten   # tell JAX how to pack back into a 
     )
-
-
-    return (RegisteredDenseLayer,)
+    return RegisteredDenseLayer, register_pytree_node
 
 
 @app.cell
-def _(HIDDEN_DIM, NUM_FEATURES, RegisteredDenseLayer, jax, jnp, metadata, np):
-    def verify_registration() -> bool:
-        initial = RegisteredDenseLayer(
-            W = jnp.asarray(np.random.rand(NUM_FEATURES, HIDDEN_DIM)),
-            b= jnp.asarray([1, 1, 1, 1]),
-            metadata=metadata
-        )
-        tree_vals, tree_defn = jax.tree.flatten(initial)
-        reconstructed: RegisteredDenseLayer = jax.tree.unflatten(tree_defn, tree_vals)
+def _(
+    HIDDEN_DIM,
+    NUM_FEATURES,
+    RegisteredDenseLayer,
+    jnp,
+    metadata,
+    np,
+    verify_registration,
+):
+    initial = RegisteredDenseLayer(
+        W = jnp.asarray(np.random.rand(NUM_FEATURES, HIDDEN_DIM)),
+        b= jnp.asarray([1, 1, 1, 1]),
+        metadata=metadata
+    )
+    verify_registration(initial=initial)
+    return (initial,)
 
-        ####################################
-        # Check Equality
-        ####################################
-        meta_keys_equal = set(initial.metadata.keys()) == set(reconstructed.metadata.keys())
-        if not meta_keys_equal:
-            print("Keys in our metadata were different!")
-            return False
-        meta_values_equal = True
-        for k in initial.metadata.keys():
-            meta_values_equal = meta_values_equal and (initial.metadata[k] == reconstructed.metadata[k])        
-    
-        w_equal = np.all(initial.numerical["W"] == reconstructed.numerical["W"])
-        b_equal = np.all(initial.numerical["b"] == reconstructed.numerical["b"])
-    
-        print(f"Weights Equal: {w_equal}, Biases Equal: {b_equal}, Metadata Equal: {meta_values_equal}")
-        return w_equal and b_equal and meta_keys_equal and meta_values_equal
 
-    verify_registration()
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    ## Not so fast....
+
+    Run the following cell, then add a `@jax.jit` to the `add_up` function and rerun it.
+    """
+    )
+    return
+
+
+@app.cell
+def _(initial, jax, jnp):
+    print(initial.numerical)
+
+    def add_up(t1, t2):
+        if isinstance(t1, jnp.ndarray) and isinstance(t2, jnp.ndarray):
+            return t1 + t2
+        return t1
+
+    print(jax.tree.map(add_up, initial, initial, is_leaf=lambda x: isinstance(x, dict)).numerical)
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    ## The problem
+
+    Jax flattened our data and passed all of the information in the `children` variable to the `add_up` function. Ponder this statement as you solve the next exercise, where we make it work with `jit`
+    """
+    )
+    return
+
+
+@app.cell
+def _(DenseLayer, RegisteredDenseLayer, register_pytree_node):
+    class RegisteredDenseLayerCompatible(DenseLayer):
+        def __repr__(self):
+            shapes = {k: v.shape for k,v in self.numerical.items()}
+            return f"RegisteredDenseLayer: Metadata: {self.metadata} with {shapes}"
+
+    def dense_tree_flatten_compat(dl: DenseLayer):
+        md_keys = []
+        md_values = []
+
+        for k, v in dl.metadata.items():
+            md_keys.append(k)
+            md_values.append(v)
+
+
+        children = [dl.numerical["W"], dl.numerical["b"]] 
+        return tuple(children), (md_keys, md_values)
+
+    def dense_tree_unflatten_compat(aux_data, children):
+        W, b = children
+        reconstructed_metadata = {k: v for (k, v) in zip(*aux_data)}
+        return RegisteredDenseLayer(W, b, reconstructed_metadata)
+
+
+    register_pytree_node(
+        RegisteredDenseLayerCompatible,
+        dense_tree_flatten_compat,    # tell JAX what are the children nodes
+        dense_tree_unflatten_compat   # tell JAX how to pack back into a 
+    )
+    return (RegisteredDenseLayerCompatible,)
+
+
+@app.cell
+def _(
+    HIDDEN_DIM,
+    NUM_FEATURES,
+    RegisteredDenseLayerCompatible,
+    jax,
+    jnp,
+    metadata,
+    np,
+):
+    initial_dense_compat = RegisteredDenseLayerCompatible(
+        W = jnp.asarray(np.random.rand(NUM_FEATURES, HIDDEN_DIM)),
+        b= jnp.asarray([1, 1, 1, 1]),
+        metadata=metadata
+    )
+    print(initial_dense_compat.numerical)
+
+    @jax.jit
+    def add_up_jitable(t1, t2):
+        return t1 + t2
+
+    print(jax.tree.map(add_up_jitable, initial_dense_compat, initial_dense_compat).numerical)
     return
 
 
