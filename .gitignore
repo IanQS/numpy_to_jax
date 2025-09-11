@@ -4,6 +4,7 @@ solutions/spike_res.npy  # Ignore the obnoxiously large file
 __pycache__/
 scratch
 .virtual_documents/
+__marimo__
 
 .idea
 .DS_store
