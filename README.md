@@ -43,7 +43,17 @@ The `exercises` folder contains the code structured as a series of exercises for
 
 - learn the design decisions behind Jax's RNG implementation
 
+### L7: Grad Basics
 
+- learn the basics behind Jax's grad methods that will cover 90% of usecases
+
+### L8: Grad Intermediate
+
+- should probably be called grad manipulations, where we stop gradients, skip applications, and more
+
+### L9: PyTrees
+
+- learn how Jax internally handles data structures and how to add your own custom data structure to the model registry
 
 ### Bonus: using Einsum for more readable code
 
@@ -57,12 +67,11 @@ Case studies build on the exercises and rely on concepts covered in the lessons.
 
 # Work in progress:
 
-- [ ] pmap
-  - Introduction to parallel execution with examples using multiple devices. Having said that, this should still work even with a single device
-- [ ] grad
-  - and grad_and_val to get the gradient
-- [ ] GMM Advanced
-  - Add in `rng` and `pmap` to a separate notebook
+- [ ] Grad Advanced, which will cover custom gradients, `jacrev` and `jacfwd`
+- [ ] 3d Parallelism
+  - [ ] data
+  - [ ] pipeline
+  - [ ] tensor parallelism
 
 ## Citation
 
